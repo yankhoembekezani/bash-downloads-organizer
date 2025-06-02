@@ -1,0 +1,16 @@
+# Ignore logs
+*.log
+
+# Ignore temporary Vim files
+*.swp
+*.swo
+*.swn
+.*.sw?
+
+# Ignore backup files
+*~
+*.bak
+
+# Ignore macOS-specific hidden files
+.DS_Store
+

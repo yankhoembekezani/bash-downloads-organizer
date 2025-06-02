@@ -8,6 +8,20 @@ destination_directory=~/Downloads/DEST_DIR1
 mkdir -p "$destination_directory"
 mkdir -p "$destination_directory"/{PDFs,Images,Archives,ISO_images,Others}
 
+#logging
+log_file=~/bash-scripts/downloads_organizer.log
+
+function log {
+	local level="$1"
+	local message="$2"
+	local timestamp
+	timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+	echo "$timestamp [$level] $message" >> "$log_file"
+	echo "$message"
+
+}
+
 # dry-run mode
 dry_run=false
 [[ "$1" == "--dry-run" ]] && dry_run=true
@@ -21,65 +35,65 @@ for i in "$directory2organize"/*; do
         case "$i" in
             *.pdf)
                 if $dry_run; then
-			echo "would move '$(basename "$i")' to 'PDFs/'" 
+			log "DRY RUN:" "would move '$(basename "$i")' to 'PDFs/'" 
                 else
-                    if mv "$i" "PDFs"; then
-			    echo "moved '$(basename "$i")' to 'PDFs/'" 
+                    if mv "$i"  "$destination_directory/PDFs"; then
+			    log "INFO:" "moved '$(basename "$i")' to 'PDFs/'" 
                         ((pdf_count++))
                     else
-			    echo "ERROR: failed to move '$(basename "$i")' to 'PDFs/'" 
+			    log "ERROR:" "failed to move '$(basename "$i")' to 'PDFs/'" 
                     fi
                 fi
                 ;;
 
             *.jpg|*.jpeg|*.png)
                 if $dry_run; then
-			echo "would move '$(basename "$i")' to 'Images'" 
+			log "DRY RUN:" "would move '$(basename "$i")' to 'Images'" 
                 else
-                    if mv "$i" "Images"; then
-			    echo "moved '$(basename "$i")' to 'Images'" 
+                    if mv "$i"  "$destination_directory/Images"; then
+			    log "INFO:" "moved '$(basename "$i") to 'Images'" 
                         ((img_count++))
                     else
-                        echo "ERROR: failed to move '$(basename "$i") to 'Images'" 
+                        log "ERROR:" "failed to move '$(basename "$i")' to 'Images'" 
                     fi
                 fi
                 ;;  
 
             *.tar|*.tar.gz|*.rar)
                 if $dry_run; then
-                    echo "would move '$(basename "$i") to 'Archives'" 
+                    log "DRY RUN:" "would move '$(basename "$i")' to 'Archives'" 
                 else
-                    if mv "$i" "Archives"; then
-                        echo "moved '$i' to 'Archives'" 
+                    if mv "$i"  "$destination_directory/Archives"; then
+                        log "INFO:" "moved '$i' to 'Archives'" 
                         ((arc_count++))
                     else
-                        echo "ERROR: failed to move '$(basename "$i") to 'Archives'" 
+                        log "ERROR:" "failed to move '$(basename "$i")' to 'Archives'" 
                     fi
                 fi
                 ;;
 
             *.iso)
                 if $dry_run; then
-                    echo "would move '$(basename "$i") to 'ISO_images'" 
+                    log "DRY RUN:" "would move '$(basename "$i")' to 'ISO_images'" 
                 else
-                    if mv "$i" "ISO_images"; then
-                        echo "moved '$i' to 'ISO_images'" 
+                    if mv "$i"  "$destination_directory/ISO_images"; then
+                        log "INFO:" "moved '$i' to 'ISO_images'" 
                         ((iso_count++))
                     else
-                        echo "ERROR: failed to move '$(basename "$i") to 'ISO_images'" 
+                        log "ERROR:" "failed to move '$(basename "$i")' to 'ISO_images'" 
                     fi
                 fi
                 ;;
 
             *)
                 if $dry_run; then
-                    echo "would move '$(basename "$i") to 'Others'" 
+                    log "DRY RUN:" "would move '$(basename "$i")' to 'Others'" 
                 else
-                    if mv "$i" "Others"; then
-                        echo "moved '$i' to 'Others'" 
+                    if mv "$i"  "$destination_directory/Others"; then
+                        log "INFO:" "moved '$i' to 'Others'" 
                         ((other_count++))
                     else
-			    echo "ERROR: failed to move '$(basename "$i")' to 'Others'" 
+			    log "ERROR:" "failed to move '$(basename "$i")' to 'Others'" 
                     fi
                 fi
                 ;;
@@ -88,12 +102,15 @@ for i in "$directory2organize"/*; do
 done
 
 # displaying results
-echo "Summary:"
-echo "PDFs: $pdf_count"
-echo "Images: $img_count"
-echo "Images: $img_count"
-echo "Archives: $arc_count"
-echo "ISOs: $iso_count"
-echo "Others: $other_count"
+if ! $dry_run; then
+    echo "Summary:"
+    echo "PDFs: $pdf_count"
+    echo "Images: $img_count"
+    echo "Archives: $arc_count"
+    echo "ISOs: $iso_count"
+    echo "Others: $other_count"
+    echo "Organization of files done!"
+else
+    echo "Dry run complete. No files were moved."
+fi
 
-echo "Organization of files done!" 
