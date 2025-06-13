@@ -1,109 +1,87 @@
 #!/bin/bash
 
-# source and destination directories
+# === CONFIGURATION ===
 directory2organize=~/Downloads
 destination_directory=~/Downloads/DEST_DIR1
-
-# create destination folders
-mkdir -p "$destination_directory"
-mkdir -p "$destination_directory"/{PDFs,Images,Archives,ISO_images,Others}
-
-#logging
 log_file=~/bash-scripts/downloads_organizer.log
 
+# === CATEGORY SETUP ===
+categories=(PDFs Images Archives ISO_images Others)
+for category in "${categories[@]}"; do
+    mkdir -p "$destination_directory/$category"
+done
+
+# === LOGGING FUNCTION ===
 function log {
-	local level="$1"
-	local message="$2"
-	local timestamp
-	timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-
-	echo "$timestamp [$level] $message" >> "$log_file"
-	echo "$message"
-
+    local level="$1"
+    local message="$2"
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "$timestamp [$level] $message" >> "$log_file"
+    echo "$message"
 }
 
-# dry-run mode
+# === CONFLICT DETECTION ===
+function detect_conflict {
+    local target_file="$1"
+    [[ -e "$target_file" ]]
+}
+
+# === FILE MOVE FUNCTION ===
+function move_file {
+    local source_file="$1"
+    local target_dir="$2"
+    local category="$3"
+    local filename
+    filename=$(basename "$source_file")
+    local target_path="${target_dir}/${filename}"
+
+    if detect_conflict "$target_path"; then
+        if $dry_run; then
+            log "DRY RUN" "conflict: '$filename' already exists in '$category/'"
+        else
+            log "INFO" "skipped moving '$filename' due to conflict in '$category/'"
+        fi
+    else
+        if $dry_run; then
+            log "DRY RUN" "would move '$filename' to '$category/'"
+        elif mv "$source_file" "$target_dir"; then
+            log "INFO" "moved '$filename' to '$category/'"
+            case "$category" in
+                PDFs)       ((pdf_count++)) ;;
+                Images)     ((img_count++)) ;;
+                Archives)   ((arc_count++)) ;;
+                ISO_images) ((iso_count++)) ;;
+                Others)     ((other_count++)) ;;
+            esac
+        else
+            log "ERROR" "failed to move '$filename' to '$category/'"
+        fi
+    fi
+}
+
+# === DRY RUN FLAG ===
 dry_run=false
 [[ "$1" == "--dry-run" ]] && dry_run=true
 
-# counters
+# === COUNTERS ===
 pdf_count=0; img_count=0; arc_count=0; iso_count=0; other_count=0
 
-# iterate over files
-for i in "$directory2organize"/*; do
-    if [[ -f "$i" ]]; then
-        case "$i" in
-            *.pdf)
-                if $dry_run; then
-			log "DRY RUN:" "would move '$(basename "$i")' to 'PDFs/'" 
-                else
-                    if mv "$i"  "$destination_directory/PDFs"; then
-			    log "INFO:" "moved '$(basename "$i")' to 'PDFs/'" 
-                        ((pdf_count++))
-                    else
-			    log "ERROR:" "failed to move '$(basename "$i")' to 'PDFs/'" 
-                    fi
-                fi
-                ;;
-
-            *.jpg|*.jpeg|*.png)
-                if $dry_run; then
-			log "DRY RUN:" "would move '$(basename "$i")' to 'Images'" 
-                else
-                    if mv "$i"  "$destination_directory/Images"; then
-			    log "INFO:" "moved '$(basename "$i") to 'Images'" 
-                        ((img_count++))
-                    else
-                        log "ERROR:" "failed to move '$(basename "$i")' to 'Images'" 
-                    fi
-                fi
-                ;;  
-
-            *.tar|*.tar.gz|*.rar)
-                if $dry_run; then
-                    log "DRY RUN:" "would move '$(basename "$i")' to 'Archives'" 
-                else
-                    if mv "$i"  "$destination_directory/Archives"; then
-                        log "INFO:" "moved '$i' to 'Archives'" 
-                        ((arc_count++))
-                    else
-                        log "ERROR:" "failed to move '$(basename "$i")' to 'Archives'" 
-                    fi
-                fi
-                ;;
-
-            *.iso)
-                if $dry_run; then
-                    log "DRY RUN:" "would move '$(basename "$i")' to 'ISO_images'" 
-                else
-                    if mv "$i"  "$destination_directory/ISO_images"; then
-                        log "INFO:" "moved '$i' to 'ISO_images'" 
-                        ((iso_count++))
-                    else
-                        log "ERROR:" "failed to move '$(basename "$i")' to 'ISO_images'" 
-                    fi
-                fi
-                ;;
-
-            *)
-                if $dry_run; then
-                    log "DRY RUN:" "would move '$(basename "$i")' to 'Others'" 
-                else
-                    if mv "$i"  "$destination_directory/Others"; then
-                        log "INFO:" "moved '$i' to 'Others'" 
-                        ((other_count++))
-                    else
-			    log "ERROR:" "failed to move '$(basename "$i")' to 'Others'" 
-                    fi
-                fi
-                ;;
-        esac
-    fi
+# === FILE CLASSIFICATION ===
+for file in "$directory2organize"/*; do
+    [[ -f "$file" ]] || continue
+    case "$file" in
+        *.pdf)                move_file "$file" "$destination_directory/PDFs" "PDFs" ;;
+        *.jpg|*.jpeg|*.png)   move_file "$file" "$destination_directory/Images" "Images" ;;
+        *.tar|*.tar.gz|*.rar) move_file "$file" "$destination_directory/Archives" "Archives" ;;
+        *.iso)                move_file "$file" "$destination_directory/ISO_images" "ISO_images" ;;
+        *)                    move_file "$file" "$destination_directory/Others" "Others" ;;
+    esac
 done
 
-# displaying results
+# === SUMMARY OUTPUT ===
 if ! $dry_run; then
-    echo "Summary:"
+    echo -e "\nSummary:"
     echo "PDFs: $pdf_count"
     echo "Images: $img_count"
     echo "Archives: $arc_count"
@@ -111,6 +89,6 @@ if ! $dry_run; then
     echo "Others: $other_count"
     echo "Organization of files done!"
 else
-    echo "Dry run complete. No files were moved."
+    echo -e "\nDry run complete. No files were moved."
 fi
 
