@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # === CONFIGURATION ===
 directory2organize=~/Downloads
 destination_directory=~/Downloads/DEST_DIR1
@@ -21,10 +20,42 @@ function log {
     echo "$message"
 }
 
-# === CONFLICT DETECTION ===
+# === HASH FUNCTION ===
+function hash_file {
+	local file="$1"
+	sha256sum "$file" | awk '{print $1}'
+}
+
+# === CONFLICT DETECTION FUNCTION ===
 function detect_conflict {
-    local target_file="$1"
-    [[ -e "$target_file" ]]
+	local target_file="$1"
+	local source_file="$2"
+	local src_filename tgt_filename
+	tgt_filename=$(basename $target_file)
+	src_filename=$(basename $source_file)
+
+if [[ -e "$target_file" ]]; then
+	local hash_src=$(hash_file "$source_file")
+	local hash_tgt=$(hash_file "$target_file")
+
+	if [[ "$hash_src" == "$hash_tgt" ]]; then
+		log "INFO" "duplicate detected: '$src_filename' and '$tgt_filename'"
+		return 2 # Duplicate
+	else
+		return 1 # Conflict
+	fi
+fi
+
+return 0 # No conflict
+
+}
+
+# === SANITIZE FILENAME FUNCTION ===
+function sanitize_filename {
+	local raw="$1"
+	
+	# Strip leading and trailing whitespace
+	echo "$raw" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
 
 # === FILE MOVE FUNCTION ===
@@ -36,12 +67,19 @@ function move_file {
     filename=$(basename "$source_file")
     local target_path="${target_dir}/${filename}"
 
-    if detect_conflict "$target_path"; then
+	detect_conflict "$target_path" "$source_file"
+	conflict_status=$?
+
+    if [[ $conflict_status -eq 1 ]]; then
         if $dry_run; then
-            log "DRY RUN" "conflict: '$filename' already exists in '$category/'"
+            log "DRY RUN" "conflict: '$filename' already exists in '$category/' with different content"
         else
             log "INFO" "skipped moving '$filename' due to conflict in '$category/'"
         fi
+
+    elif [[ $conflict_status -eq 2 ]]; then
+	log "INFO" "skipped moving '$filename'; identical file already exist in '$category/'" 
+ 		
     else
         if $dry_run; then
             log "DRY RUN" "would move '$filename' to '$category/'"
@@ -70,6 +108,13 @@ pdf_count=0; img_count=0; arc_count=0; iso_count=0; other_count=0
 # === FILE CLASSIFICATION ===
 for file in "$directory2organize"/*; do
     [[ -f "$file" ]] || continue
+
+   clean_name=$(sanitize_filename "$(basename "$file")")
+    clean_path="$(dirname "$file")/$clean_name"
+    if [[ "$file" != "$clean_path" ]]; then
+        mv "$file" "$clean_path"
+        file="$clean_path"
+    fi
     case "$file" in
         *.pdf)                move_file "$file" "$destination_directory/PDFs" "PDFs" ;;
         *.jpg|*.jpeg|*.png)   move_file "$file" "$destination_directory/Images" "Images" ;;
