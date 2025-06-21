@@ -11,6 +11,10 @@ A Bash script that organizes files in your `~/Downloads` directory by file type.
 - Structured logging with timestamps, log levels, and detailed messages  
 - Automatically creates destination folders if missing  
 - Tracks moved files with counters and summaries  
+- **Sanitizes filenames by trimming unwanted leading/trailing spaces**  
+- ***Detects identical files using SHA256 hash comparison to avoid redundant moves***  
+- ***Resolves filename conflicts (same name, different content) by auto-renaming files with hash + timestamp suffix***
+
 
 ---
 
@@ -30,6 +34,8 @@ A Bash script that organizes files in your `~/Downloads` directory by file type.
 
 # Preview actions without moving files (dry-run mode)
 ./organize_downloads.sh --dry-run
+
+
 ```
 
 ---
@@ -67,13 +73,11 @@ chmod +x organize_downloads.sh
 
 - Organizes files only at the top level of `~/Downloads` (no recursive sorting)  
 - Fixed category mappings—no current support for user-defined types  
-- No automatic handling of duplicate filenames (files with the same name may be overwritten)  
 
 ---
 
 ## Planned Features
 
-- **Auto-renaming duplicates** to prevent overwriting  
 - **Undo mechanism** to revert file moves  
 - **Custom log file path via CLI flag** (`--log-file <path>`)  
 - **Expanded file type support:** Videos, Audio, Office Documents, Code Files  

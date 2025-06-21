@@ -58,7 +58,38 @@ function sanitize_filename {
 	echo "$raw" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
 
-# === FILE MOVE FUNCTION ===
+# === CONFLICT RESOLUTION FUNCTION ===
+function resolve_conflict_and_move {
+    local source_file="$1"
+    local target_dir="$2"
+    local filename
+    filename=$(basename "$source_file")
+
+    local timestamp
+    timestamp=$(date +%Y%m%d_%H%M%S)
+
+    local hash_suffix
+    hash_suffix=$(sha256sum "$source_file" | awk '{print substr($1,1,8)}')
+
+    local new_filename="${filename%.*}_conflict_${timestamp}_${hash_suffix}.${filename##*.}"
+    local new_target_path="${target_dir}/${new_filename}"
+
+    if $dry_run; then
+        log "DRY RUN" "conflict: '$filename' already exists with different content"
+        log "DRY RUN" "would rename and move as: '$new_filename'"
+    else
+        if mv "$source_file" "$new_target_path"; then
+            log "INFO" "resolved conflict by renaming and moving to: '$new_filename'"
+            echo "$new_filename"
+            return 0
+        else
+            log "ERROR" "failed to move '$filename' to '$new_filename'"
+            return 1
+        fi
+    fi
+}
+
+# === MOVE FILE FUNCTION ===
 function move_file {
     local source_file="$1"
     local target_dir="$2"
@@ -67,20 +98,28 @@ function move_file {
     filename=$(basename "$source_file")
     local target_path="${target_dir}/${filename}"
 
-	detect_conflict "$target_path" "$source_file"
-	conflict_status=$?
+    detect_conflict "$target_path" "$source_file"
+    conflict_status=$?
 
     if [[ $conflict_status -eq 1 ]]; then
-        if $dry_run; then
-            log "DRY RUN" "conflict: '$filename' already exists in '$category/' with different content"
-        else
-            log "INFO" "skipped moving '$filename' due to conflict in '$category/'"
+        # Conflict — different content, same name
+        resolved_name=$(resolve_conflict_and_move "$source_file" "$target_dir")
+        if [[ $? -eq 0 && ! $dry_run ]]; then
+            case "$category" in
+                PDFs)       ((pdf_count++)) ;;
+                Images)     ((img_count++)) ;;
+                Archives)   ((arc_count++)) ;;
+                ISO_images) ((iso_count++)) ;;
+                Others)     ((other_count++)) ;;
+            esac
         fi
 
     elif [[ $conflict_status -eq 2 ]]; then
-	log "INFO" "skipped moving '$filename'; identical file already exist in '$category/'" 
- 		
+        # Duplicate file — identical content
+        log "INFO" "skipped moving '$filename'; identical file already exists in '$category/'"
+
     else
+        # No conflict — move file normally
         if $dry_run; then
             log "DRY RUN" "would move '$filename' to '$category/'"
         elif mv "$source_file" "$target_dir"; then
@@ -97,6 +136,7 @@ function move_file {
         fi
     fi
 }
+
 
 # === DRY RUN FLAG ===
 dry_run=false

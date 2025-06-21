@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
-## [Unreleased]
+## [v0.3.0] - 2025-06-21
 ### Added
 - `hash_file()` function for SHA256-based content comparison
 - `sanitize_filename()` to normalize filenames by trimming whitespace
