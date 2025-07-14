@@ -1,6 +1,12 @@
+[![Shell Script](https://img.shields.io/badge/Bash-4.0+-blue?logo=gnu-bash)](https://www.gnu.org/software/bash/)
+[![License](https://img.shields.io/github/license/yankhoembekezani/bash-downloads-organizer)](https://github.com/yankhoembekezani/bash-downloads-organizer/blob/main/LICENSE)
+[![Maintained](https://img.shields.io/badge/Maintained-yes-brightgreen.svg)](https://github.com/yankhoembekezani/bash-downloads-organizer)
+
+
 # Bash Downloads Organizer
 
-A Bash script that organizes files in your `~/Downloads` directory by file type.
+A robust and safe Bash script that organizes your downloads folder — with undo, dry-run mode, conflict resolution, and full logging.
+
 
 ---
 
@@ -11,10 +17,12 @@ A Bash script that organizes files in your `~/Downloads` directory by file type.
 - Structured logging with timestamps, log levels, and detailed messages  
 - Automatically creates destination folders if missing  
 - Tracks moved files with counters and summaries  
-- **Sanitizes filenames by trimming unwanted leading/trailing spaces**  
-- ***Detects identical files using SHA256 hash comparison to avoid redundant moves***  
-- ***Resolves filename conflicts (same name, different content) by auto-renaming files with hash + timestamp suffix***
-
+- Sanitizes filenames by trimming unwanted leading/trailing spaces 
+- Detects identical files using SHA256 hash comparison to avoid redundant moves  
+- Resolves filename conflicts (same name, different content) by auto-renaming files with hash + timestamp suffix
+- ***Undo mechanism to revert moved or renamed files interactively***
+- ***Records every action to an undo log for safe rollback***
+- ***Supports confirmation prompts before each reversal***
 
 ---
 
@@ -35,8 +43,23 @@ A Bash script that organizes files in your `~/Downloads` directory by file type.
 # Preview actions without moving files (dry-run mode)
 ./organize_downloads.sh --dry-run
 
+# Revert previous file moves (with confirmation prompts)
+./organize_downloads.sh --undo
+
+To a undo a specific file only, partial undo support is planned for future versions 
 
 ```
+---
+## Undo Mechanism
+
+- Each move or rename is logged to `downloads_undo.log`
+
+- Running `--undo` will reverse these changes one by one
+
+- You are prompted to confirm each undo action
+
+- Once undone, the log is cleared to prevent double reversions
+
 
 ---
 
@@ -78,7 +101,7 @@ chmod +x organize_downloads.sh
 
 ## Planned Features
 
-- **Undo mechanism** to revert file moves  
+- + **Partial undo support** for specific files or time windows    
 - **Custom log file path via CLI flag** (`--log-file <path>`)  
 - **Expanded file type support:** Videos, Audio, Office Documents, Code Files  
 - **Configuration file support** for custom categories and extensions  

@@ -2,11 +2,28 @@
 
 All notable changes to this project are documented here.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [v1.0.0] - 2025-06-22
+
+### Added
+- **Undo mechanism** with interactive confirmation for each reversal
+- `--undo` CLI flag to trigger undo mode
+- Logging of all file moves and renames to `downloads_undo.log`
+- Logic to reverse both `MOVED` and `RENAMED` operations via log playback
+- Entry filtering to skip missing files during undo
+
+### Changed
+- Updated `README.md` to include Undo usage and feature documentation
+- Added license (MIT) and associated badge for open-source clarity
+- Included badges for Bash version, license type, and maintenance status
 
 ---
 
 ## [v0.3.0] - 2025-06-21
+
 ### Added
 - `hash_file()` function for SHA256-based content comparison
 - `sanitize_filename()` to normalize filenames by trimming whitespace
@@ -17,6 +34,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 ---
 
 ## [v0.2.0] - 2025-06-13
+
 ### Refactored
 - Modularized classification and move logic into distinct functions
 - Introduced early conflict detection using file presence checks
@@ -24,6 +42,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 ---
 
 ## [v0.1.1] - 2025-06-02
+
 ### Added
 - Structured logging with timestamps and log levels
 - Initial `README.md` and `.gitignore` for project documentation and cleanup
@@ -31,10 +50,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 ---
 
 ## [v0.1.0] - 2025-05-28
+
 ### Added
 - Initial implementation of the Bash Downloads Organizer
 - File categorization by extension (PDFs, Images, Archives, ISOs, Others)
 - Basic move logic for sorting downloads
-
----
 
