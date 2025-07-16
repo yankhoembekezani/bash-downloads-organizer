@@ -6,53 +6,31 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) an
 
 ---
 
-## [v1.0.0] - 2025-06-22
+## [v1.0.0] - 2025-07-16
+
+🎉 **First official tagged release**
 
 ### Added
-- **Undo mechanism** with interactive confirmation for each reversal
-- `--undo` CLI flag to trigger undo mode
-- Logging of all file moves and renames to `downloads_undo.log`
-- Logic to reverse both `MOVED` and `RENAMED` operations via log playback
-- Entry filtering to skip missing files during undo
-
-### Changed
-- Updated `README.md` to include Undo usage and feature documentation
-- Added license (MIT) and associated badge for open-source clarity
-- Included badges for Bash version, license type, and maintenance status
+- **Organizes files** from `~/Downloads` into 5 categories: PDFs, Images, Archives, ISOs, and Others
+- **`--undo` mode** with interactive confirmation to revert moved or renamed files
+- **`--dry-run` mode** to preview file organization actions without making changes
+- **`--help` flag** displays CLI usage instructions and supported options
+- **Conflict resolution**: files with the same name but different content are renamed with a timestamp + short hash to prevent overwriting
+- **Duplicate detection**: identical files (based on SHA256 hash) are skipped to avoid redundant moves
+- **Logging system**:
+  - All actions are logged to `downloads_organizer.log`
+  - Undo actions tracked in `downloads_undo.log`
+  - Log entries include timestamps, log levels (`INFO`, `DRY RUN`, `ERROR`), and action details
+- **Undo mechanism**:
+  - Uses structured log playback
+  - Supports both `MOVED` and `RENAMED` reversals
+  - Prompts user for confirmation before each undo
+  - Skips missing files and clears undo log after reversal
+- **Filename sanitization**: trims leading and trailing whitespace from all file names before moving
+- **Auto-creation of destination folders** if they don’t already exist
+- **MIT License** added for open-source clarity
 
 ---
 
-## [v0.3.0] - 2025-06-21
-
-### Added
-- `hash_file()` function for SHA256-based content comparison
-- `sanitize_filename()` to normalize filenames by trimming whitespace
-- Enhanced `detect_conflict()` to distinguish true duplicates from content-level conflicts
-- Pre-move renaming for files with problematic names (e.g. trailing spaces)
-- Code cleanup and improved internal consistency of `move_file()`
-
----
-
-## [v0.2.0] - 2025-06-13
-
-### Refactored
-- Modularized classification and move logic into distinct functions
-- Introduced early conflict detection using file presence checks
-
----
-
-## [v0.1.1] - 2025-06-02
-
-### Added
-- Structured logging with timestamps and log levels
-- Initial `README.md` and `.gitignore` for project documentation and cleanup
-
----
-
-## [v0.1.0] - 2025-05-28
-
-### Added
-- Initial implementation of the Bash Downloads Organizer
-- File categorization by extension (PDFs, Images, Archives, ISOs, Others)
-- Basic move logic for sorting downloads
+_This is the first officially tagged release. Prior development history was tracked but not versioned._
 
