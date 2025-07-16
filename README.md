@@ -1,52 +1,81 @@
+[![Shell Script](https://img.shields.io/badge/Bash-4.0+-blue?logo=gnu-bash)](https://www.gnu.org/software/bash/)
+[![License](https://img.shields.io/github/license/yankhoembekezani/bash-downloads-organizer)](https://github.com/yankhoembekezani/bash-downloads-organizer/blob/main/LICENSE)
+[![Maintained](https://img.shields.io/badge/Maintained-yes-brightgreen.svg)](https://github.com/yankhoembekezani/bash-downloads-organizer)
+
+
 # Bash Downloads Organizer
 
-A Bash script that organizes files in your `~/Downloads` directory by file type.
+A robust and safe Bash script that organizes your `~/Downloads` folder — with undo, dry-run mode, conflict resolution, and full logging.
+
 
 ---
 
 ## Features
 
-- Categorizes files into predefined groups: PDFs, Images, Archives, ISO files, Others  
-- Dry-run mode to preview actions without modifying files  
-- Structured logging with timestamps, log levels, and detailed messages  
+- Organizes files into categories: PDFs, Images, Archives, ISOs, Others  
+- Dry-run mode to preview actions before making any changes  
+- Undo mode to safely revert moved or renamed files with confirmation prompts  
+- Conflict resolution: auto-renames files if name exists but content differs  
+- Skips identical files using SHA256 hash checks  
+- Logging: detailed logs with timestamps and log levels  
+- `--help` flag for quick usage guidance
 - Automatically creates destination folders if missing  
-- Tracks moved files with counters and summaries  
-- **Sanitizes filenames by trimming unwanted leading/trailing spaces**  
-- ***Detects identical files using SHA256 hash comparison to avoid redundant moves***  
-- ***Resolves filename conflicts (same name, different content) by auto-renaming files with hash + timestamp suffix***
-
 
 ---
 
 ## Prerequisites
 
 - Bash version 4.0 or higher  
-- Unix-like operating system (tested on Linux, macOS)  
-- Basic permissions to read/write in `~/Downloads` and log directory  
+- Unix-like operating system (tested on Linux and macOS)  
+- Read/write permissions in `~/Downloads` and the log directory  
 
+---
+
+## Installation
+
+```bash
+git clone https://github.com/yankhoembekezani/bash-downloads-organizer.git
+cd bash-downloads-organizer
+chmod +x organize_downloads.sh
+```
 ---
 
 ## Usage
 
 ```bash
-# Move files for real
+# Organize files normally
 ./organize_downloads.sh
 
-# Preview actions without moving files (dry-run mode)
+# Preview actions without moving files 
 ./organize_downloads.sh --dry-run
 
+# Revert previous file moves or renames
+./organize_downloads.sh --undo
+
+# Show help
+./organize_downloads.sh --help 
 
 ```
+---
+## Undo Mechanism
+
+- Each move or rename is recorded in `downloads_undo.log`
+
+- `--undo` will reverse these changes one by one
+
+- You are prompted to confirm each undo action (`y`,`n`, or `a` for all)
+
+- Once undone, the log is cleared to prevent duplicate reversions
 
 ---
 
 ## Logging
 
-- Logs are saved by default to: `~/bash-scripts/downloads_organizer.log`  
+- Logs are saved to: `~/bash-scripts/downloads_organizer.log`  
 - Log entries include timestamps, log level, and descriptive messages  
 - Log levels used:
   - `INFO`: Actual file moves  
-  - `DRY RUN`: Simulated moves during dry-run  
+  - `DRY RUN`: Simulated moves (dry-run mode)  
   - `ERROR`: Failed operations  
 
 ### Example log entries
@@ -59,33 +88,42 @@ A Bash script that organizes files in your `~/Downloads` directory by file type.
 
 ---
 
-## Installation
+##  Implementation Notes
 
-```bash
-git clone https://github.com/yankhoembekezani/bash-downloads-organizer.git
-cd bash-downloads-organizer
-chmod +x organize_downloads.sh
-```
+These internal behaviours (not exposed as user-facing features)
+
+ - Filenames are sanitized (removes leading/trailing whitespace)
+ - Uses SHA256 hashing to detect duplicate files
+ - Renames conflicting files with timestamp + hash suffix
+ - Tracks and summarizes moved files counts per category
 
 ---
 
 ## Limitations
 
-- Organizes files only at the top level of `~/Downloads` (no recursive sorting)  
-- Fixed category mappings—no current support for user-defined types  
+- Organizes only top level files in `~/Downloads` (no recursive sorting)  
+- Category mappings are fixed-user-defined types not yet supported  
 
 ---
 
 ## Planned Features
 
-- **Undo mechanism** to revert file moves  
-- **Custom log file path via CLI flag** (`--log-file <path>`)  
-- **Expanded file type support:** Videos, Audio, Office Documents, Code Files  
-- **Configuration file support** for custom categories and extensions  
-
+- `--target-dir <path>` to allow organizing any directory 
+- Config file support for custom categories and file extensions
+- Partial undo support (by file or time window)
+- Expanded file type support: video, audio, office documents, code files
+  
 ---
 
 ## Contribution
 
-Feel free to open issues or submit pull requests on GitHub for improvements or bug fixes.
+Pull requests and issue reports are welcome.
+Help improve features, fix bugs, or enhance documentation.
+
+---
+
+## License
+
+This project is licensed under the MIT License.  
+See the [LICENSE](LICENSE) file for full details.
 
