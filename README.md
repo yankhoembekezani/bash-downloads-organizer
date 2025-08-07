@@ -13,15 +13,15 @@ A robust and safe Bash script that organizes files in any directory (default `~/
 
 - Organizes files into categories (Images, Videos, Docs, etc.) in **any directory** using `--target-dir <path>` (defaults to `~/Downloads`)
   
-    Images:`jpg` `jpeg` `png` `gif` `svg` `webp` `bmp` `tiff`
-    Videos:`mp4` `mkv` `mov` `avi` `webm` `flv`
-    Audio:`mp3` `wav` `aac` `flac` `ogg` `m4a`
-    Documents:`doc` `docx` `xls` `xlsx` `ppt` `pptx` `txt` `csv` `odt`
-    Archives:`zip` `rar` `tar` `gz` `bz2` `7z` `xz`
-    Installers:`exe` `msi` `deb` `rpm` `dmg` `pkg` `sh`
-    ISOs:`iso` `img` `bin` `nrg`
-    Code:`py` `js` `html` `css` `json` `xml` `yaml` `yml` `sh` `java` `c` `cpp`
-    Others:
+    * Images:`jpg` `jpeg` `png` `gif` `svg` `webp` `bmp` `tiff`
+    * Videos:`mp4` `mkv` `mov` `avi` `webm` `flv`
+    * Audio:`mp3` `wav` `aac` `flac` `ogg` `m4a`
+    * Documents:`doc` `docx` `xls` `xlsx` `ppt` `pptx` `txt` `csv` `odt`
+    * Archives:`zip` `rar` `tar` `gz` `bz2` `7z` `xz`
+    * Installers:`exe` `msi` `deb` `rpm` `dmg` `pkg` `sh`
+    * ISOs:`iso` `img` `bin` `nrg`
+    * Code:`py` `js` `html` `css` `json` `xml` `yaml` `yml` `sh` `java` `c` `cpp`
+    * Others:
 
 - Custom target directory support using `--target-dir <path>`
 - Dry-run mode to preview actions before making any changes  
