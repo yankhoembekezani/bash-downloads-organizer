@@ -1,30 +1,100 @@
 #!/bin/bash
 
 # === CONFIGURATION ===
-directory2organize=~/Downloads
-destination_directory=~/Downloads/DEST_DIR1
-log_file=~/bash-scripts/downloads_organizer.log
-undo_log_file=~/bash-scripts/downloads_undo.log
+
+# === DEFAULT TARGET-DIR
+target_dir="$HOME/Downloads"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+log_file="$SCRIPT_DIR/organizer.log"
+undo_log_file="$SCRIPT_DIR/organizer_undo.log"
+
+target_dir_arg_set=false
+mkdir -p "$(dirname "$log_file")"
+mkdir -p "$(dirname "$undo_log_file")"
+ 
+
+# ===== FLAG INITIALIZATION =====
+
+help_mode=false
+dry_run=false
+undo_mode=false
+
+# Loop through arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help)
+            help_mode=true
+            shift
+            ;;
+        --dry-run)
+            dry_run=true
+            shift
+            ;;
+        --undo)
+            undo_mode=true
+            shift
+            ;;
+	--target-dir)
+    	    shift
+    	    if [[ -z "$1" ]]; then
+    		echo "Error: --target-dir requires a path argument."
+        	exit 1
+    	    fi
+    	    if [[ ! -d "$1" ]]; then
+        	echo "Error: Provided path '$1' is not a valid directory."
+        	exit 1
+    	    fi
+    	    target_dir="$1"
+    	    target_dir_arg_set=true   # <-- Mark that the user passed a path
+            shift
+    	    ;;
+          -*)
+		echo "unknown option $1"
+		exit 1
+		;;
+	*)
+		echo "unexpected argument $1"
+		exit 1
+		;;		
+    esac
+done
 
 # === CATEGORY SETUP ===
+
+destination_directory="$target_dir/organized"
 categories=(PDFs Images Archives ISO_images Others)
 for category in "${categories[@]}"; do
     mkdir -p "$destination_directory/$category"
 done
+ 
+# === DIRECTORY TO ORGANIZE ===
 
-# ===== FLAG INITIALIZATION =====
+if [[ -d "$target_dir" && -w "$target_dir" ]]; then
+	directory2organize="$target_dir"
+else 
+	echo "ERROR: '$target_dir' is not a writable directory"
+	exit 1
+fi
 
-# === HELP FLAG ===
-help_mode=false
-[[ "$1" == "--help" ]] && help_mode=true
+# === FLAG COMPATIBILITY VALIDATION ===
 
-# === DRY RUN FLAG ===
-dry_run=false
-[[ "$1" == "--dry-run" ]] && dry_run=true
+# --help must be used alone
+if $help_mode && { $dry_run || $undo_mode || [[ "$target_dir_arg_set" == true ]]; }; then
+    echo "Error: --help must be used alone."
+    exit 1
+fi
 
-# === UNDO FLAG ===
-undo_mode=false
-[[ "$1" == "--undo" ]] && undo_mode=true
+# --dry-run and --undo cannot be used together
+if $dry_run && $undo_mode; then
+    echo "Error: --dry-run and --undo cannot be used together."
+    exit 1
+fi
+
+# --undo and --target-dir are not allowed together
+if $undo_mode && [[ "$target_dir_arg_set" == true ]]; then
+    echo "Error: --undo cannot be used with --target-dir."
+    exit 1
+fi
 
 # === COUNTERS ===
 pdf_count=0; img_count=0; arc_count=0; iso_count=0; other_count=0
@@ -35,11 +105,12 @@ function help {
 
     if [[ "$help_flag" == true ]]; then
         cat << _EOF_
-Usage: ./organize_downloads.sh [OPTION]
+Usage: ./organize.sh [OPTION]
 
-Organizes files in ~/Downloads into categorized folders.
+Organizes files in a specified directory (Downloads by default) into categorized folders.
 
 Options:
+  --target-dir <path>  specify directory to organize (defaults to ~/Downloads)
   --dry-run      Show what would be done without moving files
   --undo         Revert last file organization based on undo log
   --help         Display this help message
@@ -113,13 +184,13 @@ function resolve_conflict_and_move {
     local hash_suffix
     hash_suffix=$(sha256sum "$source_file" | awk '{print substr($1,1,8)}')
 
-    extension="${filename##*.}"
-    basename="${filename%.*}"
+    local extension="${filename##*.}"
+    local basename="${filename%.*}"
 
     if [[ "$filename" == "$extension" ]]; then
-    	new_filename="${filename}_conflict_${timestamp}_${hash_suffix}"
+    	local new_filename="${filename}_conflict_${timestamp}_${hash_suffix}"
     else
-    	new_filename="${basename}_conflict_${timestamp}_${hash_suffix}.${extension}"
+    	local new_filename="${basename}_conflict_${timestamp}_${hash_suffix}.${extension}"
     fi
 
     local new_target_path="${target_dir}/${new_filename}"
@@ -154,7 +225,7 @@ function move_file {
 
     if [[ $conflict_status -eq 1 ]]; then
         # Conflict — different content, same name
-        resolved_name=$(resolve_conflict_and_move "$source_file" "$target_dir")
+        resolve_conflict_and_move "$source_file" "$target_dir"
         if [[ $? -eq 0 && ! $dry_run ]]; then
             case "$category" in
                 PDFs)       ((pdf_count++)) ;;
@@ -212,6 +283,8 @@ apply_all=false # undo all option
             		*) echo "⏭ Skipped: $dst"; continue ;;
         	esac
     	fi
+	
+	mkdir -p "$(dirname "$src")"
 
     	if mv "$dst" "$src"; then
         	echo "✔ Undone: $dst → $src"
@@ -230,13 +303,17 @@ apply_all=false # undo all option
 fi
 
 # === FILE CLASSIFICATION ===
+shopt -s nullglob
 for file in "$directory2organize"/*; do
     [[ -f "$file" ]] || continue
 
    clean_name=$(sanitize_filename "$(basename "$file")")
     clean_path="$(dirname "$file")/$clean_name"
     if [[ "$file" != "$clean_path" ]]; then
-        mv "$file" "$clean_path"
+        if ! mv "$file" "$clean_path"; then
+		log "ERROR" "failed to rename '$file' to sanitized version"
+		continue
+	fi
         file="$clean_path"
     fi
     case "$file" in
@@ -247,6 +324,7 @@ for file in "$directory2organize"/*; do
         *)                    move_file "$file" "$destination_directory/Others" "Others" ;;
     esac
 done
+shopt -u nullglob
 
 # === SUMMARY OUTPUT ===
 if ! $dry_run; then

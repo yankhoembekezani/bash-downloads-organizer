@@ -3,16 +3,16 @@
 [![Maintained](https://img.shields.io/badge/Maintained-yes-brightgreen.svg)](https://github.com/yankhoembekezani/bash-downloads-organizer)
 
 
-# Bash Downloads Organizer
+# Organizer.sh
 
-A robust and safe Bash script that organizes your `~/Downloads` folder — with undo, dry-run mode, conflict resolution, and full logging.
-
+A robust and safe Bash script that organizes your `~/Downloads` folder — with undo, dry-run mode, customizable target directory, conflict resolution, and full logging.
 
 ---
 
 ## Features
 
-- Organizes files into categories: PDFs, Images, Archives, ISOs, Others  
+- Organizes files into categories: PDFs, Images, Archives, ISOs, Others
+- Custom target directory support using `--target-dir <path>`
 - Dry-run mode to preview actions before making any changes  
 - Undo mode to safely revert moved or renamed files with confirmation prompts  
 - Conflict resolution: auto-renames files if name exists but content differs  
@@ -27,7 +27,7 @@ A robust and safe Bash script that organizes your `~/Downloads` folder — with 
 
 - Bash version 4.0 or higher  
 - Unix-like operating system (tested on Linux and macOS)  
-- Read/write permissions in `~/Downloads` and the log directory  
+- Read/write permissions in the source and target directories 
 
 ---
 
@@ -36,30 +36,34 @@ A robust and safe Bash script that organizes your `~/Downloads` folder — with 
 ```bash
 git clone https://github.com/yankhoembekezani/bash-downloads-organizer.git
 cd bash-downloads-organizer
-chmod +x organize_downloads.sh
+chmod +x organize.sh
 ```
 ---
 
 ## Usage
 
 ```bash
-# Organize files normally
-./organize_downloads.sh
+# Organize ~/Downloads by default
+./organize.sh
+
+# Organize a different directory
+./organize.sh --target-dir /path/to/folder
 
 # Preview actions without moving files 
-./organize_downloads.sh --dry-run
+./organize.sh --dry-run
 
 # Revert previous file moves or renames
-./organize_downloads.sh --undo
+./organize.sh --undo
 
 # Show help
-./organize_downloads.sh --help 
+./organize.sh --help 
 
 ```
 ---
+
 ## Undo Mechanism
 
-- Each move or rename is recorded in `downloads_undo.log`
+- Each move or rename is recorded in `organizer_undo.log`
 
 - `--undo` will reverse these changes one by one
 
@@ -71,7 +75,7 @@ chmod +x organize_downloads.sh
 
 ## Logging
 
-- Logs are saved to: `~/bash-scripts/downloads_organizer.log`  
+- Logs are saved to: `~/bash-scripts/organizer.log`  
 - Log entries include timestamps, log level, and descriptive messages  
 - Log levels used:
   - `INFO`: Actual file moves  
@@ -84,6 +88,7 @@ chmod +x organize_downloads.sh
 2025-06-02 14:33:02 [INFO] moved 'file.pdf' to 'PDFs/'
 2025-06-02 14:33:03 [DRY RUN] would move 'image.jpg' to 'Images/'
 2025-06-02 14:33:04 [ERROR] failed to move 'badfile.iso' to 'ISO_images/'
+
 ```
 
 ---
@@ -108,7 +113,6 @@ These internal behaviours (not exposed as user-facing features)
 
 ## Planned Features
 
-- `--target-dir <path>` to allow organizing any directory 
 - Config file support for custom categories and file extensions
 - Partial undo support (by file or time window)
 - Expanded file type support: video, audio, office documents, code files
