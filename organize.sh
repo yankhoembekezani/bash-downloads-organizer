@@ -62,11 +62,22 @@ done
 # === CATEGORY SETUP ===
 
 destination_directory="$target_dir/organized"
-categories=(PDFs Images Archives ISO_images Others)
-for category in "${categories[@]}"; do
-    mkdir -p "$destination_directory/$category"
+
+declare -A FILE_GROUPS=(
+    [Images]="jpg jpeg png gif svg webp bmp tiff"
+    [Videos]="mp4 mkv mov avi webm flv mpg"
+    [Audio]="mp3 wav aac flac ogg m4a"
+    [Documents]="pdf doc docx xls xlsx ppt pptx txt csv odt"
+    [Archives]="zip rar tar gz bz2 7z xz"
+    [Installers]="exe msi deb rpm dmg pkg sh"
+    [ISOs]="iso img bin nrg"
+    [Code]="py js html css json xml yaml yml sh java c cpp"
+)
+
+for category in "${!FILE_GROUPS[@]}"; do
+	mkdir -p "$destination_directory/$category"
 done
- 
+
 # === DIRECTORY TO ORGANIZE ===
 
 if [[ -d "$target_dir" && -w "$target_dir" ]]; then
@@ -97,10 +108,20 @@ if $undo_mode && [[ "$target_dir_arg_set" == true ]]; then
 fi
 
 # === COUNTERS ===
-pdf_count=0; img_count=0; arc_count=0; iso_count=0; other_count=0
+declare -A CATEGORY_COUNTERS=(
+	[Images]=0
+	[Videos]=0
+	[Audio]=0
+	[Documents]=0
+	[Archives]=0
+	[Installers]=0
+	[ISOs]=0
+	[Code]=0
+	[Others]=0
+)
 
 # === HELP FUNCTION ===
-function help {
+function print_help {
     local help_flag="$1"
 
     if [[ "$help_flag" == true ]]; then
@@ -115,12 +136,12 @@ Options:
   --undo         Revert last file organization based on undo log
   --help         Display this help message
 
-All activities are logged to ~/bash-scripts/downloads_organizer.log
+All activities are logged to ~/bash-scripts/organizer.log
 _EOF_
 exit 0
     fi
 }
-help "$help_mode"
+print_help "$help_mode"
 
 
 # === LOGGING FUNCTION ===
@@ -227,13 +248,7 @@ function move_file {
         # Conflict — different content, same name
         resolve_conflict_and_move "$source_file" "$target_dir"
         if [[ $? -eq 0 && ! $dry_run ]]; then
-            case "$category" in
-                PDFs)       ((pdf_count++)) ;;
-                Images)     ((img_count++)) ;;
-                Archives)   ((arc_count++)) ;;
-                ISO_images) ((iso_count++)) ;;
-                Others)     ((other_count++)) ;;
-            esac
+            ((CATEGORY_COUNTERS["$category"]++))
         fi
 
     elif [[ $conflict_status -eq 2 ]]; then
@@ -247,14 +262,7 @@ function move_file {
         elif mv "$source_file" "$target_dir"; then
             log "INFO" "moved '$filename' to '$category/'"
 	    echo "MOVED|$source_file|$target_path" >> "$undo_log_file"
-	
-            case "$category" in
-                PDFs)       ((pdf_count++)) ;;
-                Images)     ((img_count++)) ;;
-                Archives)   ((arc_count++)) ;;
-                ISO_images) ((iso_count++)) ;;
-                Others)     ((other_count++)) ;;
-            esac
+	    ((CATEGORY_COUNTERS["$category"]++))	
         else
             log "ERROR" "failed to move '$filename' to '$category/'"
         fi
@@ -289,7 +297,7 @@ apply_all=false # undo all option
     	if mv "$dst" "$src"; then
         	echo "✔ Undone: $dst → $src"
     	else
-        	echo "✖ Failed to move: $dst"
+        	echo "✖ Failed to move: $dst" >&2
     	fi
 	else
     		echo "⚠ Missing: $dst not found."
@@ -316,24 +324,39 @@ for file in "$directory2organize"/*; do
 	fi
         file="$clean_path"
     fi
-    case "$file" in
-        *.pdf)                move_file "$file" "$destination_directory/PDFs" "PDFs" ;;
-        *.jpg|*.jpeg|*.png)   move_file "$file" "$destination_directory/Images" "Images" ;;
-        *.tar|*.tar.gz|*.rar) move_file "$file" "$destination_directory/Archives" "Archives" ;;
-        *.iso)                move_file "$file" "$destination_directory/ISO_images" "ISO_images" ;;
-        *)                    move_file "$file" "$destination_directory/Others" "Others" ;;
-    esac
+    ext="${file##*.}"
+    ext="${ext,,}" # convert to lowercase
+    category_found=false
+
+    for category in "${!FILE_GROUPS[@]}"; do
+    	for valid_ext in ${FILE_GROUPS[$category]}; do
+        	if [[ "$ext" == "$valid_ext" ]]; then
+            		move_file "$file" "$destination_directory/$category" "$category"
+            		category_found=true
+            		break 2
+        	fi
+    	done
+    done
+
+# If no match found, put in Others
+if ! $category_found; then
+    move_file "$file" "$destination_directory/Others" "Others"
+fi
+
+
 done
 shopt -u nullglob
 
 # === SUMMARY OUTPUT ===
 if ! $dry_run; then
-    echo -e "\nSummary:"
-    echo "PDFs: $pdf_count"
-    echo "Images: $img_count"
-    echo "Archives: $arc_count"
-    echo "ISOs: $iso_count"
-    echo "Others: $other_count"
+	echo -e "\nOrganized file summary:"
+	for moved_category in "${!CATEGORY_COUNTERS[@]}"; do
+		count="${CATEGORY_COUNTERS[$moved_category]}"
+		if [[ "$count" -gt 0 ]]; then
+			echo "$moved_category: $count"
+		fi
+	done | sort -k2 -nr
+
     echo "Organization of files done!"
 else
     echo -e "\nDry run complete. No files were moved."
