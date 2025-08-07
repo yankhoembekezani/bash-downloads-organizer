@@ -5,7 +5,7 @@ All notable changes to this project are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ---
 
-## [v1.2.0] - 2025-08-06
+## [v1.1.0] - 2025-08-06
 
 ### Added
 - `--target-dir <path>` option for organizing any directory, not just ~/Downloads
