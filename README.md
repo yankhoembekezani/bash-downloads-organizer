@@ -31,6 +31,8 @@ A robust and safe Bash script that organizes files in any directory (default `~/
 - Logging: detailed logs with timestamps and log levels  
 - `--help` flag for quick usage guidance
 - Automatically creates destination folders if missing  
+- **Optional INI configuration file** using `--config <path>` to add **additional file formats or categories** beyond the defaults  <!-- new feature -->
+- `--generate-config` creates a starter template for the config file  <!-- new feature -->
 
 ---
 
@@ -124,7 +126,6 @@ These internal behaviours (not exposed as user-facing features)
 
 ## Planned Features
 
-- Config file support for custom categories and file extensions
 - Partial undo support (by file or time window)
  
 ---

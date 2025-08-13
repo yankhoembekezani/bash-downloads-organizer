@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-08-13
+### Added
+- Optional `--config <path>` support for merging additional file formats or categories from an INI file
+- `--generate-config` to create starter config template next to the script
+- Category merging handles custom extensions without overwriting defaults
+
+### Changed
+- Help (`--help`) now validated to run alone; prints usage immediately
+- Dry-run, undo, target-dir, and config flag compatibility validation improved
+- Internal logging behavior tweaked to ensure all key operations are logged
+
+### Fixed
+- Minor bug fixes in category folder creation 
+
+---
+
 ## [v1.2.0] - 2025-08-07
 
 ### Added
