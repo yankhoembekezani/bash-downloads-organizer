@@ -2,6 +2,8 @@
 [![License](https://img.shields.io/github/license/yankhoembekezani/bash-downloads-organizer)](https://github.com/yankhoembekezani/bash-downloads-organizer/blob/main/LICENSE)
 [![Maintained](https://img.shields.io/badge/Maintained-yes-brightgreen.svg)](https://github.com/yankhoembekezani/bash-downloads-organizer)
 
+# ⚠️ Archived Project
+This project is currently inactive. Active development may resume in the future.
 
 # Organizer.sh
 
